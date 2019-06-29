@@ -1,0 +1,39 @@
+apiVersion: "kubeflow.org/v1beta2"
+kind: "TFJob"
+metadata:
+  name: "tf-smoke-gpu"
+spec:
+  tfReplicaSpecs:
+    Worker:
+      replicas: 3
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - args:
+            - python3
+            - tf_cnn_benchmarks.py
+            - --batch_size=128
+            - --model=resnet50
+            - --variable_update=parameter_server
+            - --num_gpus=8
+            - --local_parameter_device=cpu
+            - --device=gpu
+            - --data_format=NCHW
+            - --use_fp16
+            - --num_batches=10000
+            env:
+            - name: TF_ROCM_FUSION_ENABLE
+              value: "1"
+            image: rocm/tensorflow:latest
+            name: tensorflow
+            ports:
+            - containerPort: 2222
+              name: tfjob-port
+            resources:
+              limits:
+                amd.com/gpu: 8
+            workingDir: /root/benchmarks/scripts/tf_cnn_benchmarks
+          restartPolicy: OnFailure
+
