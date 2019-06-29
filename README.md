@@ -4,7 +4,7 @@
 
 ```
 # Start it
-cd tf-cnn-benchmarks
+cd tensorflow/tf-cnn-benchmarks
 kubectl apply -f ./tfjob-cnn-benchmarks-smoketest.yaml
 
 # Check it
