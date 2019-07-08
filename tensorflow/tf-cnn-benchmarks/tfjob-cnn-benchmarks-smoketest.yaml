@@ -14,7 +14,7 @@ spec:
           - args:
             - python3
             - tf_cnn_benchmarks.py
-            - --batch_size=128
+            - --batch_size=256
             - --model=resnet50
             - --variable_update=parameter_server
             - --num_gpus=8
