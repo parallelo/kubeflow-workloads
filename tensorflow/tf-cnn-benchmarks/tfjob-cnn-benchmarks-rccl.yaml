@@ -1,0 +1,41 @@
+apiVersion: "kubeflow.org/v1beta2"
+kind: "TFJob"
+metadata:
+  name: "tf-smoke-rccl"
+spec:
+  tfReplicaSpecs:
+    Worker:
+      replicas: 3
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - args:
+            - python3
+            - tf_cnn_benchmarks.py
+            - --batch_size=256
+            - --model=resnet50
+            - --variable_update=replicated
+            - --all_reduce_spec=nccl
+            - --num_gpus=8
+            - --device=gpu
+            - --data_format=NCHW
+            - --use_fp16
+            - --num_batches=1000
+            env:
+            - name: TF_ROCM_FUSION_ENABLE
+              value: "1"
+            - name: HSA_FORCE_FINE_GRAIN_PCIE
+              value: "1"
+            image: jeffdaily/tensorflow:dev20190724-rocm2.6-ofed4.4-2.0.7.0-py3 
+            name: tensorflow
+            ports:
+            - containerPort: 2222
+              name: tfjob-port
+            resources:
+              limits:
+                amd.com/gpu: 8
+            workingDir: /root/benchmarks/scripts/tf_cnn_benchmarks
+          restartPolicy: OnFailure
+
