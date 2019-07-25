@@ -1,0 +1,59 @@
+apiVersion: "kubeflow.org/v1beta2"
+kind: "TFJob"
+metadata:
+  name: "tf-resnet"
+spec:
+  tfReplicaSpecs:
+    Worker:
+      replicas: 2 
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - command: ["/bin/bash","-c"]
+            args: 
+              - echo starting;
+                python3 ./imagenet_main.py --use_synthetic_data --num_gpus 8 --distribution_strategy=multi_worker_mirrored --all_reduce_alg=nccl --hooks=ExamplesPerSecondHook;
+                echo done;
+            env:
+            - name: PYTHONPATH
+              value: "$PYTHONPATH:/root/models" 
+            image: jeffdaily/tensorflow:dev20190724-rocm2.6-ofed4.4-2.0.7.0-py3 
+            name: tensorflow
+            ports:
+            - containerPort: 2222
+              name: tfjob-port
+            resources:
+              limits:
+                amd.com/gpu: 8
+            workingDir: /root/models/official/resnet
+          restartPolicy: OnFailure
+
+
+    Chief:
+      replicas: 1
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - command: ["/bin/bash","-c"]
+            args:
+              - echo starting;
+                python3 ./imagenet_main.py --use_synthetic_data --num_gpus 8 --distribution_strategy=multi_worker_mirrored --all_reduce_alg=nccl --hooks=ExamplesPerSecondHook;
+                echo done;
+            env:
+            - name: PYTHONPATH
+              value: "$PYTHONPATH:/root/models"
+            image: jeffdaily/tensorflow:dev20190724-rocm2.6-ofed4.4-2.0.7.0-py3
+            name: tensorflow
+            ports:
+            - containerPort: 2222
+              name: tfjob-port
+            resources:
+              limits:
+                amd.com/gpu: 8
+            workingDir: /root/models/official/resnet
+          restartPolicy: OnFailure
+
